@@ -1,0 +1,9 @@
+{
+  "location": {
+    "name": "Mumbai",
+    "lat": 19.076,
+    "lon": 72.8777
+  },
+  "target_date": "2025-01-15",
+  "variables": ["temperature", "rainfall", "humidity"]
+}

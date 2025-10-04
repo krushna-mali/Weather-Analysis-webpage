@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Full Flow Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .test { margin: 20px 0; padding: 15px; border: 1px solid #ddd; }
+        .success { background: #d4edda; }
+        .error { background: #f8d7da; }
+        button { padding: 10px 15px; margin: 5px; }
+        input { padding: 8px; margin: 5px; width: 200px; }
+    </style>
+</head>
+<body>
+    <h1>🧪 Complete Flow Test</h1>
+    
+    <div class="test">
+        <h3>1. Login Test</h3>
+        <input type="text" id="username" placeholder="Username" value="NextGenMinds">
+        <input type="password" id="password" placeholder="Password" value="Pass@123">
+        <button onclick="testLogin()">Test Login</button>
+        <div id="loginResult"></div>
+    </div>
+
+    <div class="test">
+        <h3>2. Search Test</h3>
+        <input type="text" id="searchQuery" placeholder="City name" value="mumbai">
+        <button onclick="testSearch()">Test Search</button>
+        <div id="searchResult"></div>
+    </div>
+
+    <div class="test">
+        <h3>3. Weather Query Test</h3>
+        <button onclick="testWeatherQuery()">Test Weather Query</button>
+        <div id="weatherResult"></div>
+    </div>
+
+    <script>
+        let authToken = null;
+
+        async function testLogin() {
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            const result = document.getElementById('loginResult');
+            
+            try {
+                const response = await fetch('/api/v1/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    authToken = data.access_token;
+                    result.innerHTML = `<div class="success">✅ Login Success! Token: ${authToken.substring(0, 20)}...</div>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Login Failed: ${data.detail}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Login Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testSearch() {
+            const query = document.getElementById('searchQuery').value;
+            const result = document.getElementById('searchResult');
+            
+            try {
+                const response = await fetch(`/api/v1/geocode?q=${encodeURIComponent(query)}`);
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<div class="success">✅ Search Success! Found ${data.length} results:<br><pre>${JSON.stringify(data, null, 2)}</pre></div>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Search Failed: ${JSON.stringify(data)}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Search Error: ${error.message}</div>`;
+            }
+        }
+
+        async function testWeatherQuery() {
+            const result = document.getElementById('weatherResult');
+            
+            if (!authToken) {
+                result.innerHTML = `<div class="error">❌ Please login first</div>`;
+                return;
+            }
+            
+            try {
+                const queryData = {
+                    location: { name: "Mumbai", lat: 19.076, lon: 72.8777 },
+                    target_date: "2025-01-15",
+                    variables: ["temperature", "rainfall", "humidity"]
+                };
+                
+                const response = await fetch('/api/v1/query', {
+                    method: 'POST',
+                    headers: { 
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${authToken}`
+                    },
+                    body: JSON.stringify(queryData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    result.innerHTML = `<div class="success">✅ Weather Query Success!<br><pre>${JSON.stringify(data, null, 2).substring(0, 500)}...</pre></div>`;
+                } else {
+                    result.innerHTML = `<div class="error">❌ Weather Query Failed: ${JSON.stringify(data)}</div>`;
+                }
+            } catch (error) {
+                result.innerHTML = `<div class="error">❌ Weather Query Error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>
